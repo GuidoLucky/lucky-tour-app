@@ -140,7 +140,7 @@
     <label>Capturas de Sabre / Amadeus</label>
     <div class="upload-area" id="uploadArea" onclick="document.getElementById('fileInput').click()">
       <div class="icon">📸</div>
-      <div>Tocá para subir las capturas</div>
+      <div>Tocá para subir o pegá con Ctrl+V</div>
       <div style="font-size:12px; margin-top:4px; color:#aaa">Itinerario + Tarifas de cada opción</div>
       <input type="file" id="fileInput" multiple accept="image/*">
       <div class="filenames" id="filenames"></div>
@@ -216,6 +216,25 @@
     uploadArea.classList.remove('drag');
     fileInput.files = e.dataTransfer.files;
     fileInput.dispatchEvent(new Event('change'));
+  });
+
+  // Pegar imagen desde portapapeles (Ctrl+V)
+  document.addEventListener('paste', e => {
+    const items = Array.from(e.clipboardData.items);
+    const imageItems = items.filter(item => item.type.startsWith('image/'));
+    if (imageItems.length === 0) return;
+
+    const dt = new DataTransfer();
+    Array.from(fileInput.files).forEach(f => dt.items.add(f));
+    imageItems.forEach((item, idx) => {
+      const file = item.getAsFile();
+      const renamedFile = new File([file], `captura_${Date.now()}_${idx}.png`, { type: file.type });
+      dt.items.add(renamedFile);
+    });
+    fileInput.files = dt.files;
+    fileInput.dispatchEvent(new Event('change'));
+    uploadArea.classList.add('drag');
+    setTimeout(() => uploadArea.classList.remove('drag'), 400);
   });
 
   async function analizar() {
