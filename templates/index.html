@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cotizador — Lucky Tour</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: #f0f4f8;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .card {
+      background: white;
+      border-radius: 16px;
+      box-shadow: 0 4px 24px rgba(0,0,0,0.10);
+      padding: 36px 32px;
+      width: 100%;
+      max-width: 480px;
+    }
+
+    .logo-wrap { text-align: center; margin-bottom: 24px; }
+    .logo-wrap img { height: 70px; }
+    .logo-wrap h1 { color: #1B3A5C; font-size: 22px; margin-top: 8px; }
+
+    .step { display: none; }
+    .step.active { display: block; }
+
+    label {
+      display: block;
+      font-size: 13px;
+      font-weight: 600;
+      color: #444;
+      margin-bottom: 6px;
+      margin-top: 16px;
+    }
+
+    .upload-area {
+      border: 2px dashed #c0cfe0;
+      border-radius: 12px;
+      padding: 32px 16px;
+      text-align: center;
+      cursor: pointer;
+      transition: border-color 0.2s, background 0.2s;
+      color: #888;
+      font-size: 14px;
+    }
+    .upload-area:hover, .upload-area.drag { border-color: #1B3A5C; background: #f0f5ff; }
+    .upload-area input { display: none; }
+    .upload-area .icon { font-size: 36px; margin-bottom: 8px; }
+    .upload-area .filenames { margin-top: 10px; font-size: 12px; color: #1B3A5C; font-weight: 600; }
+
+    select, input[type=number] {
+      width: 100%;
+      padding: 10px 14px;
+      border: 1.5px solid #d0dbe8;
+      border-radius: 8px;
+      font-size: 15px;
+      color: #222;
+      background: white;
+      appearance: none;
+      -webkit-appearance: none;
+    }
+    select:focus, input[type=number]:focus {
+      outline: none;
+      border-color: #1B3A5C;
+    }
+
+    .row3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; }
+
+    .btn {
+      display: block;
+      width: 100%;
+      margin-top: 24px;
+      padding: 14px;
+      background: #1B3A5C;
+      color: white;
+      border: none;
+      border-radius: 10px;
+      font-size: 16px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .btn:hover { background: #254e7a; }
+    .btn:disabled { background: #aab8c8; cursor: not-allowed; }
+
+    .status {
+      margin-top: 16px;
+      padding: 12px 16px;
+      border-radius: 8px;
+      font-size: 14px;
+      text-align: center;
+      display: none;
+    }
+    .status.loading { background: #eef4ff; color: #1B3A5C; display: block; }
+    .status.error   { background: #fff0f0; color: #c0392b; display: block; }
+    .status.ok      { background: #efffef; color: #27ae60; display: block; }
+
+    .spinner {
+      display: inline-block;
+      width: 16px; height: 16px;
+      border: 2px solid #1B3A5C;
+      border-top-color: transparent;
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+      vertical-align: middle;
+      margin-right: 6px;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .opciones-badge {
+      display: inline-block;
+      background: #1B3A5C;
+      color: white;
+      border-radius: 20px;
+      padding: 4px 14px;
+      font-size: 13px;
+      margin-top: 8px;
+    }
+  </style>
+</head>
+<body>
+<div class="card">
+
+  <div class="logo-wrap">
+    <img src="/static/logo.png" alt="Lucky Tour" onerror="this.style.display='none'">
+    <h1>Cotizador de Vuelos</h1>
+  </div>
+
+  <!-- PASO 1: Subir capturas -->
+  <div class="step active" id="step1">
+    <label>Capturas de Sabre / Amadeus</label>
+    <div class="upload-area" id="uploadArea" onclick="document.getElementById('fileInput').click()">
+      <div class="icon">📸</div>
+      <div>Tocá para subir las capturas</div>
+      <div style="font-size:12px; margin-top:4px; color:#aaa">Itinerario + Tarifas de cada opción</div>
+      <input type="file" id="fileInput" multiple accept="image/*">
+      <div class="filenames" id="filenames"></div>
+    </div>
+
+    <button class="btn" id="btnAnalizar" onclick="analizar()" disabled>
+      Analizar capturas
+    </button>
+    <div class="status" id="status1"></div>
+  </div>
+
+  <!-- PASO 2: Datos de pasajeros -->
+  <div class="step" id="step2">
+    <div style="text-align:center; margin-bottom:16px;">
+      <div style="color:#27ae60; font-size:15px; font-weight:600;">✅ Capturas analizadas</div>
+      <div class="opciones-badge" id="opcionesBadge"></div>
+    </div>
+
+    <label>Vendedor</label>
+    <select id="vendedor">
+      <option value="guido">Guido Finkelstein</option>
+      <option value="julieta">Julieta Zubeldia</option>
+      <option value="ruthy">Ruthy Tuchsznajder</option>
+    </select>
+
+    <label>Cantidad de pasajeros</label>
+    <div class="row3">
+      <div>
+        <label style="margin-top:0">Adultos</label>
+        <input type="number" id="adultos" value="1" min="0" max="9">
+      </div>
+      <div>
+        <label style="margin-top:0">Menores</label>
+        <input type="number" id="menores" value="0" min="0" max="9">
+      </div>
+      <div>
+        <label style="margin-top:0">Infantes</label>
+        <input type="number" id="infantes" value="0" min="0" max="9">
+      </div>
+    </div>
+
+    <button class="btn" onclick="generar()">
+      Generar PDF
+    </button>
+    <div class="status" id="status2"></div>
+
+    <button class="btn" style="background:white; color:#1B3A5C; border:1.5px solid #1B3A5C; margin-top:10px;" onclick="reiniciar()">
+      Nueva cotización
+    </button>
+  </div>
+
+</div>
+
+<script>
+  const fileInput = document.getElementById('fileInput');
+  const uploadArea = document.getElementById('uploadArea');
+  const filenames  = document.getElementById('filenames');
+  const btnAnalizar = document.getElementById('btnAnalizar');
+
+  fileInput.addEventListener('change', () => {
+    const files = Array.from(fileInput.files);
+    if (files.length > 0) {
+      filenames.textContent = files.map(f => f.name).join(', ');
+      btnAnalizar.disabled = false;
+    }
+  });
+
+  // Drag & drop
+  uploadArea.addEventListener('dragover', e => { e.preventDefault(); uploadArea.classList.add('drag'); });
+  uploadArea.addEventListener('dragleave', () => uploadArea.classList.remove('drag'));
+  uploadArea.addEventListener('drop', e => {
+    e.preventDefault();
+    uploadArea.classList.remove('drag');
+    fileInput.files = e.dataTransfer.files;
+    fileInput.dispatchEvent(new Event('change'));
+  });
+
+  async function analizar() {
+    const files = fileInput.files;
+    if (!files.length) return;
+
+    const status = document.getElementById('status1');
+    status.className = 'status loading';
+    status.innerHTML = '<span class="spinner"></span> Analizando capturas con IA...';
+    btnAnalizar.disabled = true;
+
+    const formData = new FormData();
+    for (const f of files) formData.append('capturas', f);
+
+    try {
+      const res  = await fetch('/analizar', { method: 'POST', body: formData });
+      const data = await res.json();
+      if (data.ok) {
+        status.className = 'status';
+        document.getElementById('opcionesBadge').textContent =
+          data.opciones === 1 ? '1 opción detectada' : `${data.opciones} opciones detectadas`;
+        document.getElementById('step1').classList.remove('active');
+        document.getElementById('step2').classList.add('active');
+      } else {
+        status.className = 'status error';
+        status.textContent = '❌ ' + (data.error || 'Error al analizar');
+        btnAnalizar.disabled = false;
+      }
+    } catch(e) {
+      status.className = 'status error';
+      status.textContent = '❌ Error de conexión';
+      btnAnalizar.disabled = false;
+    }
+  }
+
+  async function generar() {
+    const status = document.getElementById('status2');
+    status.className = 'status loading';
+    status.innerHTML = '<span class="spinner"></span> Generando PDF...';
+
+    const formData = new FormData();
+    formData.append('vendedor', document.getElementById('vendedor').value);
+    formData.append('adultos',  document.getElementById('adultos').value);
+    formData.append('menores',  document.getElementById('menores').value);
+    formData.append('infantes', document.getElementById('infantes').value);
+
+    try {
+      const res = await fetch('/generar', { method: 'POST', body: formData });
+      if (res.ok) {
+        const blob = await res.blob();
+        const url  = URL.createObjectURL(blob);
+        const a    = document.createElement('a');
+        a.href = url;
+        a.download = 'cotizacion_lucky_tour.pdf';
+        a.click();
+        status.className = 'status ok';
+        status.textContent = '✅ PDF descargado';
+      } else {
+        const data = await res.json();
+        status.className = 'status error';
+        status.textContent = '❌ ' + (data.error || 'Error al generar');
+      }
+    } catch(e) {
+      status.className = 'status error';
+      status.textContent = '❌ Error de conexión';
+    }
+  }
+
+  function reiniciar() {
+    document.getElementById('step2').classList.remove('active');
+    document.getElementById('step1').classList.add('active');
+    document.getElementById('status1').className = 'status';
+    document.getElementById('filenames').textContent = '';
+    fileInput.value = '';
+    btnAnalizar.disabled = true;
+  }
+</script>
+</body>
+</html>
