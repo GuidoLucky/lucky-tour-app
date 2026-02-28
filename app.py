@@ -178,7 +178,7 @@ def generar_pdf_bytes(opciones_vuelo, vendedor, adultos, menores, infantes, clie
 
     fecha_s   = ParagraphStyle('f',   fontName='Helvetica',      fontSize=9,  textColor=colors.HexColor('#666666'), alignment=TA_RIGHT)
     title_s   = ParagraphStyle('t',   fontName='Helvetica-Bold', fontSize=16, textColor=NAVY, alignment=TA_CENTER, spaceAfter=1*mm)
-    cliente_s = ParagraphStyle('cl',  fontName='Helvetica',      fontSize=11, textColor=colors.HexColor('#444444'), alignment=TA_CENTER, spaceAfter=2*mm)
+    cliente_s = ParagraphStyle('cl',  fontName='Helvetica',      fontSize=11, textColor=colors.HexColor('#444444'), alignment=TA_CENTER, spaceBefore=3*mm, spaceAfter=2*mm)
     sec_s    = ParagraphStyle('sec', fontName='Helvetica-Bold', fontSize=9,  textColor=NAVY, spaceBefore=3*mm, spaceAfter=1.5*mm)
     vuelo_s  = ParagraphStyle('v',   fontName='Helvetica-Bold', fontSize=10, textColor=colors.black, spaceAfter=0.5*mm)
     det_s    = ParagraphStyle('d',   fontName='Helvetica',      fontSize=8,  textColor=colors.HexColor('#555555'), spaceAfter=1.5*mm)
@@ -329,7 +329,7 @@ def generar():
             pdf_buffer,
             mimetype="application/pdf",
             as_attachment=True,
-            download_name=f"Cotizacion aereos - {cliente} - {date.today().strftime('%d%m%Y')}.pdf" if cliente else f"Cotizacion aereos - {date.today().strftime('%d%m%Y')}.pdf"
+            download_name=f"Cotización Aéreos {cliente} - {date.today().strftime('%d-%m')}.pdf" if cliente else f"Cotización Aéreos - {date.today().strftime('%d-%m')}.pdf"
         )
     except Exception as e:
         return jsonify({"error": str(e)}), 500
