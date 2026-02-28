@@ -97,7 +97,8 @@ Respondé SOLO con un JSON válido con esta estructura exacta, sin texto adicion
           "destino": "Dubai (DXB)",
           "salida": "22.40",
           "llegada": "00.30",
-          "numero_vuelo": "EK 0248"
+          "numero_vuelo": "EK 0248",
+          "clase_tarifa": "Main Cabin"
         }
       ],
       "detalle_vuelo": "Económica",
@@ -127,6 +128,7 @@ Reglas CRÍTICAS para leer la tabla de tarifas:
   * tipo_tarifa → fila "Tipo de Tarifa" de ESA columna: "PUB" o "PNEG"
 - Si una columna (ej: Infante) no tiene fila de Comisión o Over, comision_over = 0
 - Cada tramo del vuelo es una entrada separada en "vuelos"
+- clase_tarifa es el nombre de la tarifa que figura debajo de "Económica" en cada tramo (ej: "Main Cabin", "ECO FLEX", "LITE", "Basic", etc). Si no figura, dejar ""
 - NUNCA incluir duración del vuelo
 - NUNCA poner "Con escala en X" en detalle_vuelo
 - El campo "salida" y "llegada" usan punto en vez de dos puntos (ej: 22.40)
@@ -236,7 +238,10 @@ def generar_pdf_bytes(opciones_vuelo, vendedor, adultos, menores, infantes):
             linea = f"<b>{v['fecha']}</b> &nbsp; {v['origen']} → {v['destino']} &nbsp;&nbsp; {v['salida']} → {v['llegada']}"
             story.append(Paragraph(linea, vuelo_s))
             if v.get('numero_vuelo'):
-                story.append(Paragraph(v['numero_vuelo'], det_s))
+                linea_vuelo = v['numero_vuelo']
+                if v.get('clase_tarifa'):
+                    linea_vuelo += f" · {v['clase_tarifa']}"
+                story.append(Paragraph(linea_vuelo, det_s))
 
         story.append(Paragraph(detalle, det_s))
 
