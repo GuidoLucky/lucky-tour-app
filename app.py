@@ -145,7 +145,16 @@ Reglas CRÍTICAS para leer la tabla de tarifas:
         texto = texto.split("```")[1]
         if texto.startswith("json"):
             texto = texto[4:]
-    return json.loads(texto.strip())
+    
+    resultado = json.loads(texto.strip())
+    
+    # Log para debug
+    import sys
+    print("=== DEBUG CLAUDE OUTPUT ===", file=sys.stderr)
+    print(json.dumps(resultado, indent=2, ensure_ascii=False), file=sys.stderr)
+    print("===========================", file=sys.stderr)
+    
+    return resultado
 
 
 def generar_pdf_bytes(opciones_vuelo, vendedor, adultos, menores, infantes):
