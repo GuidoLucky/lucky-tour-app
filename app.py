@@ -51,6 +51,12 @@ def calcular_precio(neto, tarifa, impuestos, tipo_tarifa='PUB', comision_over=0)
         base = tarifa + impuestos
         precio = base - descuento(comision_over), redondeado abajo
     """
+    # Sanear valores None
+    neto         = neto or 0
+    tarifa       = tarifa or 0
+    impuestos    = impuestos or 0
+    comision_over = comision_over or 0
+
     if tipo_tarifa == 'PNEG' or comision_over <= 50:
         return redondear_arriba(neto + get_fee(neto))
     else:
