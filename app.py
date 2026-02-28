@@ -186,12 +186,12 @@ def generar_pdf_bytes(opciones_vuelo, vendedor, adultos, menores, infantes):
     def cabecera():
         elems = [Paragraph(date.today().strftime("%d/%m/%Y"), fecha_s)]
         if os.path.exists(LOGO_PATH):
-            img = Image(LOGO_PATH, width=55*mm, height=46*mm)
+            img = Image(LOGO_PATH, width=75*mm, height=63*mm)
             img.hAlign = 'CENTER'
             elems.append(img)
         elems.append(Paragraph("Cotización", title_s))
-        elems.append(Spacer(1, 2*mm))
-        elems.append(HRFlowable(width="100%", thickness=2, color=NAVY, spaceAfter=4*mm))
+        elems.append(Spacer(1, 1*mm))
+        elems.append(HRFlowable(width="100%", thickness=2, color=NAVY, spaceAfter=3*mm))
         return elems
 
     story = []
