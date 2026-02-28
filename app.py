@@ -42,11 +42,20 @@ def redondear_arriba(p):
 def redondear_abajo(p):
     return int(math.floor(p / 5) * 5)
 
-def calcular_precio(neto, tipo_tarifa='PUB', comision_over=0):
+def calcular_precio(neto, tarifa, impuestos, tipo_tarifa='PUB', comision_over=0):
+    """
+    PNEG o PUB con comision_over <= 50:
+        precio = neto + fee(neto), redondeado arriba
+
+    PUB con comision_over > 50:
+        base = tarifa + impuestos
+        precio = base - descuento(comision_over), redondeado abajo
+    """
     if tipo_tarifa == 'PNEG' or comision_over <= 50:
         return redondear_arriba(neto + get_fee(neto))
     else:
-        return redondear_abajo(neto - get_descuento(comision_over))
+        base = tarifa + impuestos
+        return redondear_abajo(base - get_descuento(comision_over))
 
 def armar_linea_precio(precio, tipo, cantidad, total_pasajeros, hay_multiples_tipos):
     if total_pasajeros == 1:
@@ -89,9 +98,11 @@ Respondé SOLO con un JSON válido con esta estructura exacta, sin texto adicion
       "pasajeros": [
         {
           "tipo": "adulto",
-          "neto": 1562.37,
-          "tipo_tarifa": "PNEG",
-          "comision_over": 0
+          "tarifa": 4101.00,
+          "impuestos": 438.63,
+          "neto": 4375.59,
+          "tipo_tarifa": "PUB",
+          "comision_over": 164.04
         }
       ]
     }
@@ -104,8 +115,10 @@ Reglas importantes:
 - NUNCA poner "Con escala en X" en detalle_vuelo
 - El campo "salida" y "llegada" usan punto en vez de dos puntos (ej: 22.40)
 - tipo_tarifa es "PUB" o "PNEG"
-- comision_over es la suma de comisión + over en USD (número, no string)
-- neto es el Total de la tabla de tarifas (número, no string)
+- tarifa es el campo "Tarifa" de la tabla (número, no string)
+- impuestos es el campo "Impuestos" de la tabla (número, no string)
+- neto es el campo "Total" de la tabla (número, no string)
+- comision_over es la SUMA de Comisión + Over en USD (número, no string)
 - Si hay múltiples opciones de vuelo en las capturas, incluirlas todas
 - No incluir "cantidad" de pasajeros (eso lo preguntamos por separado)"""
     })
@@ -134,7 +147,7 @@ def generar_pdf_bytes(opciones_vuelo, vendedor, adultos, menores, infantes):
     from reportlab.lib.enums import TA_CENTER, TA_RIGHT
     import io
 
-    NAVY     = colors.HexColor('#1B3A5C')
+    NAVY      = colors.HexColor('#1B3A5C')
     LOGO_PATH = os.path.join(os.path.dirname(__file__), 'static', 'logo.png')
 
     buffer = io.BytesIO()
@@ -211,7 +224,13 @@ def generar_pdf_bytes(opciones_vuelo, vendedor, adultos, menores, infantes):
         hay_multiples_tipos = len(pasajeros) > 1
         story.append(Paragraph("💰  PRECIO" if total_pasajeros == 1 else "💰  PRECIOS", sec_s))
         for pax in pasajeros:
-            precio = calcular_precio(pax['neto'], pax.get('tipo_tarifa', 'PUB'), pax.get('comision_over', 0))
+            precio = calcular_precio(
+                pax['neto'],
+                pax.get('tarifa', 0),
+                pax.get('impuestos', 0),
+                pax.get('tipo_tarifa', 'PUB'),
+                pax.get('comision_over', 0)
+            )
             story.append(Paragraph(
                 armar_linea_precio(precio, pax['tipo'], pax['cantidad'], total_pasajeros, hay_multiples_tipos),
                 precio_s))
