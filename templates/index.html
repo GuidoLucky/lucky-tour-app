@@ -190,6 +190,10 @@
     </button>
     <div class="status" id="status2"></div>
 
+    <button class="btn" id="btnCompartir" style="display:none; background:#25D366; margin-top:10px;" onclick="compartirPDF()">
+      📤 Compartir PDF
+    </button>
+
     <button class="btn" style="background:white; color:#1B3A5C; border:1.5px solid #1B3A5C; margin-top:10px;" onclick="reiniciar()">
       Nueva cotización
     </button>
@@ -302,6 +306,14 @@
         a.click();
         status.className = 'status ok';
         status.textContent = '✅ PDF descargado';
+
+        // Mostrar botón compartir solo en móvil
+        if (/Mobi|Android|iPhone|iPad/i.test(navigator.userAgent) && navigator.share) {
+          const btnCompartir = document.getElementById('btnCompartir');
+          btnCompartir.style.display = 'block';
+          btnCompartir._blob = blob;
+          btnCompartir._filename = a.download;
+        }
       } else {
         const data = await res.json();
         status.className = 'status error';
@@ -313,7 +325,22 @@
     }
   }
 
+  async function compartirPDF() {
+    const btn = document.getElementById('btnCompartir');
+    if (!btn._blob) return;
+    const file = new File([btn._blob], btn._filename, { type: 'application/pdf' });
+    try {
+      await navigator.share({
+        title: btn._filename.replace('.pdf', ''),
+        files: [file]
+      });
+    } catch(e) {
+      if (e.name !== 'AbortError') alert('No se pudo compartir: ' + e.message);
+    }
+  }
+
   function reiniciar() {
+    document.getElementById('btnCompartir').style.display = 'none';
     document.getElementById('step2').classList.remove('active');
     document.getElementById('step1').classList.add('active');
     document.getElementById('status1').className = 'status';
