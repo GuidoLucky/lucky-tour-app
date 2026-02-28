@@ -159,7 +159,7 @@ Reglas CRÍTICAS para leer la tabla de tarifas:
     return resultado
 
 
-def generar_pdf_bytes(opciones_vuelo, vendedor, adultos, menores, infantes):
+def generar_pdf_bytes(opciones_vuelo, vendedor, adultos, menores, infantes, cliente=""):
     from reportlab.lib.pagesizes import A4
     from reportlab.lib import colors
     from reportlab.lib.units import mm
@@ -176,8 +176,9 @@ def generar_pdf_bytes(opciones_vuelo, vendedor, adultos, menores, infantes):
     doc = SimpleDocTemplate(buffer, pagesize=A4,
         rightMargin=22*mm, leftMargin=22*mm, topMargin=5*mm, bottomMargin=35*mm)
 
-    fecha_s  = ParagraphStyle('f',   fontName='Helvetica',      fontSize=9,  textColor=colors.HexColor('#666666'), alignment=TA_RIGHT)
-    title_s  = ParagraphStyle('t',   fontName='Helvetica-Bold', fontSize=16, textColor=NAVY, alignment=TA_CENTER, spaceAfter=2*mm)
+    fecha_s   = ParagraphStyle('f',   fontName='Helvetica',      fontSize=9,  textColor=colors.HexColor('#666666'), alignment=TA_RIGHT)
+    title_s   = ParagraphStyle('t',   fontName='Helvetica-Bold', fontSize=16, textColor=NAVY, alignment=TA_CENTER, spaceAfter=1*mm)
+    cliente_s = ParagraphStyle('cl',  fontName='Helvetica',      fontSize=11, textColor=colors.HexColor('#444444'), alignment=TA_CENTER, spaceAfter=2*mm)
     sec_s    = ParagraphStyle('sec', fontName='Helvetica-Bold', fontSize=9,  textColor=NAVY, spaceBefore=3*mm, spaceAfter=1.5*mm)
     vuelo_s  = ParagraphStyle('v',   fontName='Helvetica-Bold', fontSize=10, textColor=colors.black, spaceAfter=0.5*mm)
     det_s    = ParagraphStyle('d',   fontName='Helvetica',      fontSize=8,  textColor=colors.HexColor('#555555'), spaceAfter=1.5*mm)
@@ -190,6 +191,8 @@ def generar_pdf_bytes(opciones_vuelo, vendedor, adultos, menores, infantes):
             img.hAlign = 'CENTER'
             elems.append(img)
         elems.append(Paragraph("Cotización", title_s))
+        if cliente:
+            elems.append(Paragraph(cliente, cliente_s))
         elems.append(Spacer(1, 1*mm))
         elems.append(HRFlowable(width="100%", thickness=2, color=NAVY, spaceAfter=3*mm))
         return elems
@@ -318,14 +321,15 @@ def generar():
     adultos  = int(request.form.get("adultos", 1))
     menores  = int(request.form.get("menores", 0))
     infantes = int(request.form.get("infantes", 0))
+    cliente  = request.form.get("cliente", "").strip()
 
     try:
-        pdf_buffer = generar_pdf_bytes(opciones_vuelo, vendedor, adultos, menores, infantes)
+        pdf_buffer = generar_pdf_bytes(opciones_vuelo, vendedor, adultos, menores, infantes, cliente)
         return send_file(
             pdf_buffer,
             mimetype="application/pdf",
             as_attachment=True,
-            download_name="cotizacion_lucky_tour.pdf"
+            download_name=f"Cotizacion aereos - {cliente} - {date.today().strftime('%d%m%Y')}.pdf" if cliente else f"Cotizacion aereos - {date.today().strftime('%d%m%Y')}.pdf"
         )
     except Exception as e:
         return jsonify({"error": str(e)}), 500
