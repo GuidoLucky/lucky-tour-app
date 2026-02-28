@@ -115,16 +115,21 @@ Respondé SOLO con un JSON válido con esta estructura exacta, sin texto adicion
   ]
 }
 
-Reglas importantes:
+Reglas CRÍTICAS para leer la tabla de tarifas:
+- La tabla tiene columnas separadas: Adulto | Niño | Infante
+- Leé cada columna de forma INDEPENDIENTE — los valores de cada tipo de pasajero son DISTINTOS
+- NUNCA copies el mismo valor de adulto para niño o infante
+- Para cada columna extraé exactamente:
+  * tarifa → fila "Tarifa" de ESA columna
+  * impuestos → fila "Impuestos" de ESA columna
+  * neto → fila "Total" de ESA columna
+  * comision_over → suma de "Comisión" + "Over" en USD de ESA columna (si no tiene Over, solo Comisión; si no tiene ninguno, 0)
+  * tipo_tarifa → fila "Tipo de Tarifa" de ESA columna: "PUB" o "PNEG"
+- Si una columna (ej: Infante) no tiene fila de Comisión o Over, comision_over = 0
 - Cada tramo del vuelo es una entrada separada en "vuelos"
 - NUNCA incluir duración del vuelo
 - NUNCA poner "Con escala en X" en detalle_vuelo
 - El campo "salida" y "llegada" usan punto en vez de dos puntos (ej: 22.40)
-- tipo_tarifa es "PUB" o "PNEG"
-- tarifa es el campo "Tarifa" de la tabla (número, no string)
-- impuestos es el campo "Impuestos" de la tabla (número, no string)
-- neto es el campo "Total" de la tabla (número, no string)
-- comision_over es la SUMA de Comisión + Over en USD (número, no string)
 - Si hay múltiples opciones de vuelo en las capturas, incluirlas todas
 - No incluir "cantidad" de pasajeros (eso lo preguntamos por separado)"""
     })
