@@ -159,6 +159,9 @@
       <div class="opciones-badge" id="opcionesBadge"></div>
     </div>
 
+    <label>Nombre del cliente</label>
+    <input type="text" id="cliente" placeholder="Ej: Familia García" style="width:100%; padding:10px 14px; border:1.5px solid #d0dbe8; border-radius:8px; font-size:15px; color:#222; margin-bottom:4px;">
+
     <label>Vendedor</label>
     <select id="vendedor">
       <option value="guido">Guido Finkelstein</option>
@@ -276,6 +279,7 @@
     status.innerHTML = '<span class="spinner"></span> Generando PDF...';
 
     const formData = new FormData();
+    formData.append('cliente',  document.getElementById('cliente').value);
     formData.append('vendedor', document.getElementById('vendedor').value);
     formData.append('adultos',  document.getElementById('adultos').value);
     formData.append('menores',  document.getElementById('menores').value);
@@ -288,7 +292,10 @@
         const url  = URL.createObjectURL(blob);
         const a    = document.createElement('a');
         a.href = url;
-        a.download = 'cotizacion_lucky_tour.pdf';
+        const cliente = document.getElementById('cliente').value.trim() || 'cliente';
+        const hoy = new Date();
+        const fecha = `${String(hoy.getDate()).padStart(2,'0')}${String(hoy.getMonth()+1).padStart(2,'0')}${hoy.getFullYear()}`;
+        a.download = `Cotización aéreos - ${cliente} - ${fecha}.pdf`;
         a.click();
         status.className = 'status ok';
         status.textContent = '✅ PDF descargado';
